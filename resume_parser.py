@@ -1,81 +1,172 @@
 import re
-import os
-import google.generativeai as genai
 
-# Load Gemini API key from environment variable
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if not GEMINI_API_KEY:
-    raise ValueError('GEMINI_API_KEY environment variable not set')
 
-genai.configure(api_key=GEMINI_API_KEY)
+SKILLS = [
+    "python",
+    "java",
+    "javascript",
+    "sql",
+    "machine learning",
+    "deep learning",
+    "tensorflow",
+    "pytorch",
+    "scikit-learn",
+    "pandas",
+    "numpy",
+    "opencv",
+    "html",
+    "css",
+    "react",
+    "node.js",
+    "express",
+    "mongodb",
+    "mysql",
+    "git",
+    "github",
+    "docker",
+    "aws",
+    "azure",
+    "gcp"
+]
 
-def extract_structured_fields(resume_text):
-    # Simple regex-based extraction for demo purposes
-    name = re.search(r"^[A-Z][a-z]+ [A-Z][a-z]+", resume_text)
-    email = re.search(r"[\w\.-]+@[\w\.-]+", resume_text)
-    phone = re.search(r"\d{3}[-.\s]?\d{3}[-.\s]?\d{4}", resume_text)
-    education = re.findall(r"Education:.*", resume_text, re.IGNORECASE)
-    experience = re.findall(r"Experience:.*", resume_text, re.IGNORECASE)
-    skills = re.findall(r"Skills:.*", resume_text, re.IGNORECASE)
-    certifications = re.findall(r"Certifications:.*", resume_text, re.IGNORECASE)
-    
+
+def extract_email(text):
+    match = re.search(
+        r"[\w.+-]+@[\w-]+\.[\w.-]+",
+        text
+    )
+
+    return match.group(0) if match else None
+
+
+def extract_phone(text):
+    pattern = r"(?:\+91[\s-]?)?[6-9]\d{9}"
+
+    match = re.search(
+        pattern,
+        text.replace(" ", "")
+    )
+
+    return match.group(0) if match else None
+
+
+def extract_name(text):
+
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+    ]
+
+    if not lines:
+        return None
+
+    first_line = lines[0]
+
+    if (
+        len(first_line) <= 60
+        and not re.search(r"[@\d]", first_line)
+    ):
+        return first_line
+
+    return None
+
+
+def extract_skills(text):
+
+    text_lower = text.lower()
+
+    detected = []
+
+    for skill in SKILLS:
+
+        if skill.lower() in text_lower:
+            detected.append(skill)
+
+    return sorted(set(detected))
+
+
+def extract_structured_fields(text):
+
     return {
-        "name": name.group(0) if name else None,
-        "email": email.group(0) if email else None,
-        "phone": phone.group(0) if phone else None,
-        "education": education,
-        "experience": experience,
-        "skills": skills,
-        "certifications": certifications
+        "name": extract_name(text),
+        "email": extract_email(text),
+        "phone": extract_phone(text),
+        "skills": extract_skills(text)
     }
 
-def ats_feedback(resume_text):
+
+def calculate_ats_score(text, structured):
+
+    score = 100
     feedback = []
-    if 'table' in resume_text.lower():
-        feedback.append("Warning: Tables detected. ATS may not parse tables correctly.")
-    if 'image' in resume_text.lower():
-        feedback.append("Warning: Images detected. ATS cannot read images.")
-    if len(resume_text) > 10000:
-        feedback.append("Warning: Resume is very long. ATS may truncate content.")
+
+    text_lower = text.lower()
+
+    required_sections = {
+        "education": "Education section not clearly detected.",
+        "experience": "Experience section not clearly detected.",
+        "skills": "Skills section not clearly detected.",
+        "project": "Projects section not clearly detected."
+    }
+
+    for section, message in required_sections.items():
+
+        if section not in text_lower:
+            score -= 10
+            feedback.append(message)
+
+    if not structured["email"]:
+        score -= 10
+        feedback.append(
+            "Add a clearly readable professional email address."
+        )
+
+    if not structured["phone"]:
+        score -= 10
+        feedback.append(
+            "Add a clearly readable phone number."
+        )
+
+    if len(structured["skills"]) < 3:
+        score -= 10
+        feedback.append(
+            "The resume contains very few recognizable technical skills."
+        )
+
+    word_count = len(text.split())
+
+    if word_count < 200:
+        score -= 10
+        feedback.append(
+            "Resume content appears too short."
+        )
+
+    elif word_count > 1200:
+        score -= 10
+        feedback.append(
+            "Resume may be too lengthy for quick recruiter review."
+        )
+
     if not feedback:
-        feedback.append("No major ATS issues detected.")
-    return feedback
+        feedback.append(
+            "No major structural issues were detected."
+        )
 
-def analyze_resume(resume_text):
-    structured = extract_structured_fields(resume_text)
-    ats = ats_feedback(resume_text)
-    # Optionally, you can still use Gemini for deeper analysis
-    model = genai.GenerativeModel('models/gemini-1.5-pro-latest')
-    prompt = f"""
-You are a professional resume analyzer. Analyze the following resume and extract key information such as:
-- Name
-- Contact Information
-- Education
-- Work Experience
-- Skills
-- Certifications
-- Summary
+    return max(score, 0), feedback
 
-Resume:
-{resume_text}
-"""
-    response = model.generate_content(prompt)
+
+def analyze_resume(text):
+
+    structured = extract_structured_fields(text)
+
+    ats_score, feedback = calculate_ats_score(
+        text,
+        structured
+    )
+
     return {
         "structured": structured,
-        "ats_feedback": ats,
-        "gemini_analysis": response.text
+        "ats_score": ats_score,
+        "ats_feedback": feedback
     }
-
-if __name__ == "__main__":
-    # Example usage
-    sample_resume = """
-    John Doe
-    johndoe@email.com
-    123-456-7890
-    Education: B.Sc. in Computer Science, XYZ University
-    Experience: Software Engineer at ABC Corp (2018-2022)
-    Skills: Python, Machine Learning, Data Analysis
-    Certifications: AWS Certified Solutions Architect
-    """
-    result = analyze_resume(sample_resume)
-    print(result)
