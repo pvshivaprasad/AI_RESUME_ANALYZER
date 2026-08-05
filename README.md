@@ -1,36 +1,65 @@
-# README.md
+<div align="center">
 
-# 🧠 AI Resume Analyzer + Feedback Coach
+# 📄 AI Resume Analyzer
 
-This project is a smart resume analyzer that uses NLP and GPT to give actionable, AI-generated feedback on your resume. It also matches your resume against job descriptions and provides a similarity score.
+### AI-powered resume analysis with ATS-oriented checks and intelligent feedback
 
-## 🚀 Features
-- ✅ Upload your resume (PDF)
-- 🔍 Extracts content and matches against job description
-- 🧠 AI-powered feedback from GPT
-- 📊 Resume score based on JD relevance
+Built using **Python • Streamlit • Gemini AI • PyMuPDF**
 
-## 📦 Tech Stack
-- Python, Streamlit
-- PyMuPDF for PDF parsing
-- Scikit-learn for similarity scoring
-- OpenAI GPT-4 for coaching
+</div>
 
-## 🛠️ Installation
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+---
 
-## 🧪 Sample Inputs
-- Place your resume in `sample_data/resume.pdf`
-- Paste any job description in `sample_data/job_description.txt`
+## 🚀 Overview
 
-## 🌐 Deployment
-You can deploy this to Streamlit Cloud for free:
-1. Push this project to GitHub
-2. Go to https://streamlit.io/cloud and link your GitHub repo
-3. Set environment variable `OPENAI_API_KEY`
+AI Resume Analyzer is a web application that analyzes PDF resumes and
+provides structured information, ATS-oriented checks and AI-generated
+improvement suggestions.
 
-## 📬 Contact
-Feel free to connect with me on [LinkedIn](https://www.linkedin.com/) or raise issues on the GitHub repo.
+Users can upload a resume and optionally provide a job description for
+more targeted feedback.
+
+The project combines traditional text processing with generative AI to
+demonstrate a practical AI-assisted recruitment workflow.
+
+---
+
+## ✨ Features
+
+- 📄 PDF resume upload
+- 🔍 Automatic text extraction
+- 👤 Basic contact information extraction
+- 🛠️ Technical skill detection
+- 🎯 ATS-oriented resume readiness checks
+- 📊 Resume readiness score
+- 🤖 Gemini-powered resume feedback
+- 💼 Optional job-description-based analysis
+- 🔐 API credentials managed through environment variables
+
+---
+
+## 🧠 How It Works
+
+```text
+          PDF Resume
+              │
+              ▼
+      ┌─────────────────┐
+      │    PyMuPDF      │
+      │ Text Extraction │
+      └────────┬────────┘
+               │
+               ▼
+      ┌─────────────────┐
+      │ Resume Parser   │
+      │ Regex + Skills  │
+      └────────┬────────┘
+               │
+        ┌──────┴──────┐
+        ▼             ▼
+ ATS-Oriented      Gemini AI
+    Checks          Feedback
+        │             │
+        └──────┬──────┘
+               ▼
+       Streamlit Dashboard
