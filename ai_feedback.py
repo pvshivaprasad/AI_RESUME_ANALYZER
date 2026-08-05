@@ -1,45 +1,74 @@
-import google.generativeai as genai
 import os
+import google.generativeai as genai
 
-# Set your Gemini API key here (or use an environment variable for security)
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if not GEMINI_API_KEY:
-    raise ValueError('GEMINI_API_KEY environment variable not set')
 
-genai.configure(api_key=GEMINI_API_KEY)
+def get_gemini_feedback(
+    resume_text,
+    job_description=None
+):
 
-def get_gemini_feedback(resume_text, jd_text=None):
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY environment variable is not configured."
+        )
+
+    genai.configure(api_key=api_key)
+
+    model = genai.GenerativeModel(
+        "gemini-1.5-flash"
+    )
+
     prompt = f"""
-You are a professional resume coach. Review the following resume and suggest:
-1. Improvements in content and formatting
-2. Keywords to add based on current trends
-3. If JD is provided, give job-specific feedback.
+You are an experienced technical recruiter and resume reviewer.
 
-Resume:
+Review the resume below.
+
+Provide concise, actionable feedback under these headings:
+
+### Resume Summary
+Briefly assess the candidate profile.
+
+### Strengths
+Identify the strongest parts of the resume.
+
+### Improvements
+Identify specific areas that should be improved.
+
+### Skills & Keywords
+Suggest relevant technical keywords that could improve discoverability.
+
+### ATS & Readability
+Suggest improvements for structure, clarity and ATS readability.
+
+Do not invent experience, qualifications, achievements or skills that
+are not supported by the resume.
+
+RESUME:
+
 {resume_text}
 """
 
-    if jd_text:
-        prompt += f"\nJob Description:\n{jd_text}\n"
+    if job_description:
 
-    model = genai.GenerativeModel('models/gemini-1.5-pro-latest')
+        prompt += f"""
+
+### Job-Specific Analysis
+
+Compare the resume with this job description.
+
+Identify:
+- relevant matching skills
+- important missing keywords
+- areas the candidate should emphasize
+- reasonable improvements without inventing experience
+
+JOB DESCRIPTION:
+
+{job_description}
+"""
+
     response = model.generate_content(prompt)
+
     return response.text.strip()
-
-# Example usage
-def main():
-    sample_resume = """
-    Jane Smith
-    janesmith@email.com
-    987-654-3210
-    Education: M.Sc. in Data Science, ABC University
-    Experience: Data Analyst at XYZ Inc (2019-2023)
-    Skills: SQL, Python, Data Visualization
-    Certifications: Google Data Analytics Professional Certificate
-    """
-    sample_jd = "Data Scientist position requiring Python, SQL, and experience with data visualization tools."
-    feedback = get_gemini_feedback(sample_resume, sample_jd)
-    print(feedback)
-
-if __name__ == "__main__":
-    main()
