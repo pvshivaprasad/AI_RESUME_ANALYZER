@@ -7,6 +7,14 @@
 <p>
 An AI-assisted resume analysis platform built with Python, Streamlit and Google Gemini that extracts resume information, evaluates common resume-quality factors and generates actionable improvement suggestions.
 </p>
+<p align="center">
+  <a href="https://airesumeanalyzer814.streamlit.app/">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-Open_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white"/>
+  </a>
+  <a href="https://github.com/pvshivaprasad/AI_RESUME_ANALYZER">
+    <img src="https://img.shields.io/badge/Source_Code-GitHub-181717?style=for-the-badge&logo=github&logoColor=white"/>
+  </a>
+</p>
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
